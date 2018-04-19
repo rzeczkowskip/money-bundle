@@ -16,31 +16,6 @@ use ResourceBundle;
  */
 class Configuration implements ConfigurationInterface
 {
-	/** @var string **/
-	private $currencyCode;
-
-	/**
-	 * @param string $locale Locale for currency code
-	 */
-	public function  __construct($locale)
-	{
-		$locales = class_exists(ResourceBundle::class)
-			? ResourceBundle::getLocales('')
-			: Intl::getLanguageBundle()->getLocales();
-
-		if (false === in_array($locale, $locales)) {
-			throw new InvalidConfigurationException("Locale '$locale' is not valid.");
-		}
-
-		if (2 == strlen($locale)) {
-			// Default US dollars
-			$locale .= '_US';
-		}
-
-		$formatter = new NumberFormatter($locale, NumberFormatter::CURRENCY);
-		$this->currencyCode = $formatter->getTextAttribute(NumberFormatter::CURRENCY_CODE);
-	}
-
 	/**
 	 * {@inheritdoc}
 	 */
@@ -51,7 +26,7 @@ class Configuration implements ConfigurationInterface
 
 		$rootNode
 			->children()
-				->scalarNode('currency')->defaultValue($this->currencyCode)->end()
+				->scalarNode('currency')->defaultValue('USD')->end()
 			->end();
 		;
 
