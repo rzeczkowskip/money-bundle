@@ -2,73 +2,72 @@
 
 namespace JK\MoneyBundle\Tests\Form\Type;
 
-use Money\Currency;
 use JK\MoneyBundle\Form\Type\MoneyType;
+use Locale;
+use Money\Currency;
 use Symfony\Component\Form\PreloadedExtension;
 use Symfony\Component\Form\Test\TypeTestCase;
 use Symfony\Component\Intl\Util\IntlTestHelper;
 use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
-use Locale;
 
 /**
  * Class MoneyTypeTest.
- *
  * @author Jakub Kucharovic <jakub@kucharovic.cz>
  */
 class MoneyTypeTest extends TypeTestCase
 {
-	protected function setUp()
-	{
-		// we test against different locales, so we need the full
-		// implementation
-		IntlTestHelper::requireFullIntl($this, false);
+    public function testPassMoneyPatternToView()
+    {
+        Locale::setDefault('en_US');
 
-		parent::setUp();
-	}
+        $view = $this->factory->create(MoneyType::class)->createView();
 
-	protected function getExtensions()
-	{
-		return [
-			new PreloadedExtension([
-				new MoneyType('CZK')
-			], [])
-		];
-	}
+        $this->assertSame('CZK {{ widget }}', $view->vars['money_pattern']);
+    }
 
-	public function testPassMoneyPatternToView()
-	{
-		Locale::setDefault('en_US');
+    public function testPassLocalizedMoneyPatternToView()
+    {
+        Locale::setDefault('cs_CZ');
 
-		$view = $this->factory->create(MoneyType::class)->createView();
+        $view = $this->factory->create(MoneyType::class)->createView();
 
-		$this->assertSame('CZK {{ widget }}', $view->vars['money_pattern']);
-	}
+        $this->assertSame('{{ widget }} Kč', $view->vars['money_pattern']);
+    }
 
-	public function testPassLocalizedMoneyPatternToView()
-	{
-		Locale::setDefault('cs_CZ');
+    public function testPassOverriddenMoneyPatternToView()
+    {
+        $view = $this->factory->create(MoneyType::class, null, ['currency' => new Currency('EUR')])->createView();
 
-		$view = $this->factory->create(MoneyType::class)->createView();
+        $this->assertSame('€ {{ widget }}', $view->vars['money_pattern']);
+    }
 
-		$this->assertSame('{{ widget }} Kč', $view->vars['money_pattern']);
-	}
-
-	public function testPassOverriddenMoneyPatternToView()
-	{
-		$view = $this->factory->create(MoneyType::class, null, ['currency' => new Currency('EUR')])->createView();
-
-		$this->assertSame('€ {{ widget }}', $view->vars['money_pattern']);
-	}
-
-	public function testPassWrongTypedCurrency()
+    public function testPassWrongTypedCurrency()
     {
         $this->expectException(InvalidOptionsException::class);
         $this->factory->create(MoneyType::class, null, ['currency' => 123]);
     }
 
-	public function testPassWrongTypedCurrencies()
+    public function testPassWrongTypedCurrencies()
     {
         $this->expectException(InvalidOptionsException::class);
         $this->factory->create(MoneyType::class, null, ['currencies' => ['EUR']]);
+    }
+
+    protected function setUp()
+    {
+        // we test against different locales, so we need the full
+        // implementation
+        IntlTestHelper::requireFullIntl($this, false);
+
+        parent::setUp();
+    }
+
+    protected function getExtensions()
+    {
+        return [
+            new PreloadedExtension([
+                new MoneyType('CZK')
+            ], [])
+        ];
     }
 }
